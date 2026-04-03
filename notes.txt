@@ -1,0 +1,2 @@
+# To assign the .local domain to the raspberry
+# sudo apt-get install avahi-daemon
