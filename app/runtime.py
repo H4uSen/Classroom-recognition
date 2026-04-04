@@ -7,7 +7,7 @@ import cv2
 import tensorflow as tf
 
 from mqtt_config import MQTT_DEFAULT_HOST, MQTT_DEFAULT_PORT, MQTT_TOPIC, create_mqtt_client, publish_prediction
-from web_server import start_server, update_data
+from web_server import add_mqtt_message, start_server, update_data
 
 from .camera import capture_bgr_frame, open_pi_camera
 from .capture_store import save_capture
@@ -129,6 +129,9 @@ def run_camera_preview(
                                 label=predicted_label,
                                 confidence=confidence,
                                 raw_score=raw_prediction,
+                            )
+                            add_mqtt_message(
+                                f"{datetime.now().strftime('%H:%M:%S')} | topic={MQTT_TOPIC} | label={predicted_label} | confidence={confidence:.4f} | raw_score={raw_prediction:.4f}"
                             )
                 except (OSError, tf.errors.OpError, ValueError) as exc:
                     print(exc)
