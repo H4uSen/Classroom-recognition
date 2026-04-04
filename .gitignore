@@ -5,3 +5,5 @@ tests_unah/
 modelos_salones.keras
 modelos_salones.tflite
 modelos_salones_int8_dynamic.tflite
+app/__pycache__/
+app/__init__.py

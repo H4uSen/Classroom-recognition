@@ -1,5 +1,7 @@
 import threading
 import time
+from collections import deque
+from datetime import datetime
 
 import cv2
 import tensorflow as tf
@@ -24,6 +26,7 @@ def run_camera_preview(
     headless: bool = False,
     class_names: list[str] | None = None,
 ) -> None:
+    max_console_predictions = 10
     resolved_class_names = class_names or DEFAULT_CLASS_NAMES
     if len(resolved_class_names) < 2:
         resolved_class_names = DEFAULT_CLASS_NAMES
@@ -72,6 +75,29 @@ def run_camera_preview(
 
         print(f"Using Pi camera index: {selected_camera_index}")
 
+        recent_predictions = deque(maxlen=max_console_predictions)
+        printed_panel_lines = 0
+
+        def render_prediction_panel() -> None:
+            nonlocal printed_panel_lines
+            if printed_panel_lines:
+                print(f"\033[{printed_panel_lines}F", end="")
+
+            lines = [f"Recent predictions (max {max_console_predictions}):"]
+            entries = list(recent_predictions)
+            for idx in range(max_console_predictions):
+                if idx < len(entries):
+                    lines.append(f"{idx + 1:02d}. {entries[idx]}")
+                else:
+                    lines.append(f"{idx + 1:02d}. -")
+
+            for line in lines:
+                print(f"\033[2K{line}")
+
+            printed_panel_lines = len(lines)
+
+        render_prediction_panel()
+
         last_capture_at = time.monotonic()
         ultima_prediccion = "Sin datos"
 
@@ -83,7 +109,7 @@ def run_camera_preview(
             if now - last_capture_at >= capture_interval_seconds:
                 try:
                     saved_path = save_capture(frame, capture_dir=capture_dir, max_recent_captures=max_recent_captures)
-                    print(f"Saved capture: {saved_path}")
+                    #print(f"Saved capture: {saved_path}")
 
                     if model is not None:
                         predicted_label, confidence, raw_prediction = predict_image(
@@ -93,9 +119,10 @@ def run_camera_preview(
                             threshold=threshold,
                         )
                         ultima_prediccion = f"{predicted_label} ({confidence:.2f})"
-                        print(
-                            f"Prediction: {predicted_label} | confidence={confidence:.4f} | raw_score={raw_prediction:.4f}"
+                        recent_predictions.append(
+                            f"{datetime.now().strftime('%H:%M:%S')} | {predicted_label} | confidence={confidence:.4f} | raw={raw_prediction:.4f}"
                         )
+                        render_prediction_panel()
                         if mqtt_client is not None:
                             publish_prediction(
                                 client=mqtt_client,
