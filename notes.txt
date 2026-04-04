@@ -1,2 +1,12 @@
-# To assign the .local domain to the raspberry
-# sudo apt-get install avahi-daemon
+To assign the .local domain to the raspberry
+La configuracion del dominio esta lista y es hausen.local
+sudo apt-get install avahi-daemon
+
+El puerto configurado en el MQTT es el 7474
+No necesita contraseña ni usuario
+
+El web server esta configurado en el puerto 5000
+
+- TODO: Configurar el camera_recognition.py para que inicia automaticamente 
+al iniciar el raspberry, para esto se puede usar el systemd.
+

@@ -8,8 +8,8 @@ except ModuleNotFoundError:
 	mqtt = None
 
 MQTT_TOPIC = "class/prediction"
-MQTT_DEFAULT_HOST = "localhost"
-MQTT_DEFAULT_PORT = 1883
+MQTT_DEFAULT_HOST = "hausen.local"
+MQTT_DEFAULT_PORT = 7474
 
 
 def create_mqtt_client(
@@ -18,14 +18,14 @@ def create_mqtt_client(
 	client_id: str = "classroom-recognition",
 ):
 	if mqtt is None:
-		raise RuntimeError("paho-mqtt is not installed in the active Python environment")
+		raise RuntimeError("paho-mqtt no está instalado o no se pudo importar en el ambiente actual.")
 	client = mqtt.Client(client_id=client_id)
 	try:
 		client.connect(host, port, keepalive=60)
 	except OSError as exc:
 		raise ConnectionError(
-			f"Could not connect to MQTT broker at {host}:{port}. "
-			"Check that the broker is running and reachable."
+			f"No se pudo conectar al broker MQTT en {host}:{port}. "
+			"Verifique que el broker esté en ejecución y sea alcanzable."
 		) from exc
 	client.loop_start()
 	return client
@@ -39,9 +39,9 @@ def publish_prediction(
 	topic: str = MQTT_TOPIC,
 ) -> None:
 	payload = {
- 		"timestamp": datetime.now(timezone.utc).isoformat(),
-		"label": label,
-		"confidence": float(confidence),
-		"raw_score": float(raw_score),
+ 		"fecha": datetime.now(timezone.utc).isoformat(),
+		"prediccion": label,
+		"certeza": float(confidence),
+		"prediccion_cruda": float(raw_score),
 	}
-	client.publish(topic, json.dumps(payload), qos=0, retain=False)
+	client.publish(topic, json.dumps(payload), qos=0, retain=True)
